@@ -1,0 +1,19 @@
+{
+  "name": "yt-shorts-clipper",
+  "version": "1.0.0",
+  "description": "Turn a YouTube video link into ready-to-upload vertical Shorts with hook, captions, and metadata.",
+  "keywords": [
+    "skills",
+    "agent-skill",
+    "youtube",
+    "shorts",
+    "antigravity",
+    "claude-code",
+    "cursor"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Harmish001/yt-shorts-clipper.git"
+  },
+  "license": "MIT"
+}

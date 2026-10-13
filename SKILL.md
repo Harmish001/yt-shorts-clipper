@@ -1,12 +1,27 @@
 ---
 name: yt-shorts-clipper
-description: Turn a YouTube video link into 2-3 ready-to-upload vertical Shorts (9:16, captioned) with hook, title, description and hashtags. Use whenever the user pastes a YouTube link and wants shorts, clips, highlights, reels, "cut this video", "make shorts from this", or repurposing a long video, even if they do not say "Shorts". Also use when the user supplies a transcript and only wants the best segments picked. Needs a machine with internet, yt-dlp and ffmpeg (Claude Code, a CLI agent, or a local terminal); in plain chat without network access, only the segment-picking step works.
+description: >-
+  Turn a YouTube video link into 2-3 ready-to-upload vertical Shorts (9:16, captioned) with hook,
+  title, description and hashtags. Use whenever the user pastes a YouTube link and wants shorts,
+  clips, highlights, reels, "cut this video", "make shorts from this", or repurposing a long video,
+  even if they do not say "Shorts". Also use when the user supplies a transcript and only wants
+  the best segments picked. Needs a machine with internet, yt-dlp and ffmpeg (Antigravity, Claude Code,
+  Cursor, a CLI agent, or a local terminal); in plain chat without network access, only the
+  segment-picking step works.
 ---
 
 # YouTube to Shorts
 
 Input: a YouTube URL (optionally: number of Shorts, max length, language).
 Output: 2-3 `.mp4` Shorts in `./shorts/` plus `shorts.md` with hook, title, description and hashtags for each.
+
+## Helper Scripts Location
+
+The skill includes executable helper scripts in the [`scripts/`](./scripts/) directory:
+- [scripts/fetch.py](./scripts/fetch.py): Downloads video, transcript, heatmaps, and metadata.
+- [scripts/cut.py](./scripts/cut.py): Crops to 9:16 vertical layout (blur or crop) and burns in ASS subtitles.
+
+> **Path Note:** When installed in a project or globally (e.g. `.agents/skills/yt-shorts-clipper` or `.claude/skills/yt-shorts-clipper`), replace `<skill-dir>` with the installed skill directory. If running inside the skill directory itself, `python scripts/<script>.py` works directly.
 
 ## Step 0: Check the environment
 
@@ -15,7 +30,7 @@ Run `yt-dlp --version` and `ffmpeg -version`. If either is missing, tell the use
 ## Step 1: Fetch
 
 ```bash
-python scripts/fetch.py "<url>" ./work
+python <skill-dir>/scripts/fetch.py "<url>" ./work
 ```
 
 This writes `video.mp4`, `transcript.json`, `heatmap.json` (YouTube's "Most replayed" curve, may be empty), and `meta.json` (title, chapters, top comments).
@@ -48,7 +63,7 @@ Show the user the plan as a short table and proceed unless they object (they may
 For each pick:
 
 ```bash
-python scripts/cut.py --video work/video.mp4 --start <s> --end <e> \
+python <skill-dir>/scripts/cut.py --video work/video.mp4 --start <s> --end <e> \
   --transcript work/transcript.json --layout <blur|crop> --out shorts/short_<n>.mp4
 ```
 

@@ -63,12 +63,12 @@ def main():
     workdir.mkdir(parents=True, exist_ok=True)
 
     opts = {
-        "format": "bv*[height<=1080][ext=mp4]+ba[ext=m4a]/b[height<=1080][ext=mp4]/b",
+        "format": "bv*[height<=1080]+ba/b[height<=1080]/b",
         "merge_output_format": "mp4",
         "outtmpl": str(workdir / "video.%(ext)s"),
         "writesubtitles": True,
         "writeautomaticsub": True,
-        "subtitleslangs": ["en", "en-US", "en-orig"],
+        "subtitleslangs": ["en.*", "en", "en-US", "en-orig"],
         "subtitlesformat": "json3",
         "ignoreerrors": "only_download",
         "getcomments": True,

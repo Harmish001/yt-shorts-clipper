@@ -67,40 +67,47 @@ def main():
     if a.end - a.start > 180:
         print("warning: Shorts can be up to 3 minutes, but 20-60s usually performs best", file=sys.stderr)
 
+    out_path = Path(a.out)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+
     tmp = Path(tempfile.mkdtemp())
     ass_path = tmp / "cap.ass"
     have_caps = False
-    if a.transcript:
-        build_ass(json.loads(Path(a.transcript).read_text(encoding="utf-8")), a.start, a.end, ass_path)
-        have_caps = True
+    try:
+        if a.transcript:
+            build_ass(json.loads(Path(a.transcript).read_text(encoding="utf-8")), a.start, a.end, ass_path)
+            have_caps = True
 
-    if a.layout == "crop":
-        base = "crop=ih*9/16:ih,scale=1080:1920,setsar=1[v0]"
-        graph = f"[0:v]{base}"
-    else:
-        graph = (
-            "[0:v]split=2[a][b];"
-            "[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=25:5[bg];"
-            "[b]scale=1080:-2[fg];"
-            "[bg][fg]overlay=(W-w)/2:(H-h)/2,setsar=1[v0]"
-        )
-    if have_caps:
-        # ffmpeg filter paths need escaping of ':' and '\'
-        esc = str(ass_path).replace("\\", "/").replace(":", "\\:")
-        graph += f";[v0]ass='{esc}'[v]"
-    else:
-        graph += ";[v0]null[v]"
+        if a.layout == "crop":
+            base = "crop=ih*9/16:ih,scale=1080:1920,setsar=1[v0]"
+            graph = f"[0:v]{base}"
+        else:
+            graph = (
+                "[0:v]split=2[a][b];"
+                "[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=25:5[bg];"
+                "[b]scale=1080:-2[fg];"
+                "[bg][fg]overlay=(W-w)/2:(H-h)/2,setsar=1[v0]"
+            )
+        if have_caps:
+            # ffmpeg filter paths need escaping of ':' and '\'
+            esc = str(ass_path).replace("\\", "/").replace(":", "\\:")
+            graph += f";[v0]ass='{esc}'[v]"
+        else:
+            graph += ";[v0]null[v]"
 
-    cmd = [
-        "ffmpeg", "-y", "-ss", str(a.start), "-t", str(a.end - a.start), "-i", a.video,
-        "-filter_complex", graph, "-map", "[v]", "-map", "0:a?",
-        "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p",
-        "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", a.out,
-    ]
-    r = subprocess.run(cmd, capture_output=True, text=True)
-    if r.returncode != 0:
-        sys.exit(r.stderr[-1500:])
-    print(f"OK  {a.out}  ({a.end - a.start:.1f}s)")
+        cmd = [
+            "ffmpeg", "-y", "-ss", str(a.start), "-t", str(a.end - a.start), "-i", a.video,
+            "-filter_complex", graph, "-map", "[v]", "-map", "0:a?",
+            "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p",
+            "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", str(out_path),
+        ]
+        r = subprocess.run(cmd, capture_output=True, text=True)
+        if r.returncode != 0:
+            sys.exit(r.stderr[-1500:])
+        print(f"OK  {out_path}  ({a.end - a.start:.1f}s)")
+    finally:
+        import shutil
+        shutil.rmtree(tmp, ignore_errors=True)
 
 
 if __name__ == "__main__":
